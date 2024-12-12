@@ -53,6 +53,16 @@ def visual_angles_to_pixels(visual_angle_rad, ppc, viewing_dist):
     - float: Number of pixels corresponding to the given visual angle.
     """
     return 2 * viewing_dist * np.tan(visual_angle_rad / 2) * ppc
+
+def round_to(number, multiple):
+    """
+    Rounds a number to the nearest multiple of a specified value.
+
+    :param number: The number to round.
+    :param multiple: The value to round to the nearest multiple of.
+    :return: The rounded number.
+    """
+    return round(number / multiple) * multiple
 #endregion
 
 #region Movement dynamics
