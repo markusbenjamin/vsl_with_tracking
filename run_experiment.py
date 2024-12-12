@@ -114,7 +114,7 @@ def increment_stage():
     if stage == 'instructions':
         stage = 'trials'
     elif stage == 'trials':
-        if all_trials_shown():
+        if all_trials_shown() or series == 'demo':
             stage = 'thanks'
         else:
             stage = 'rest'
@@ -297,6 +297,8 @@ if __name__ == "__main__":
             trial_duration /= 10
             intertrial_duration /= 10
         trial_num_per_block = 18 # (3+1)*144 = 576's divisors: [1, 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 64, 72, 96, 144, 192, 288, 576]
+        if series == 'demo':
+            trial_num_per_block = 10
         
         random_start_pos_for_target = False
         fps = 60 # Hz

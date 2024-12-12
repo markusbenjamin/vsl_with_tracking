@@ -1,0 +1,14 @@
+trial_duration: 3
+intertrial_duration: 1
+trial_num: 144
+trial_num_per_block: 5
+random_start_pos_for_target: False
+shape_size_in_visual_angles: 0.1
+std_pos_in_visual_angles: 0.04
+std_vel_in_visual_angles: 0
+blob_size_in_visual_angles: 0.05
+boundary_type: reflective
+fps: 60
+dt: 0.016666666666666666
+viewing_distance: 75
+pixel_per_cm_of_monitor: 36.45956202882199
