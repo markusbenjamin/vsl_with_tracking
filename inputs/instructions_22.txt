@@ -1,0 +1,5 @@
+Most teszt rész következik. Összesen 36 próbát fogsz hallani. Minden próba során két hangból álló pár fog megszólalni egymás után (Az 1. hangpár után a 2. hangpár). A hangpárok között lesz egy rövid szünet. A feladatod az lesz, hogy a kísérlet első részében hallott hangsorozat alapján döntsd el, hogy a két hangpár közül melyik az ISMERŐSEBB. Ha úgy gondolod, hogy az első hangpár az ISMERŐSEBB, akkor az 1-es billentyűt nyomd le, míg ha azt gondolod, hogy a második hangpár az ISMERŐSEBB akkor a 2-es billentyűvel válaszolj. Más billentyű lenyomása nem lehetséges.
+
+Fontos, hogy minden hangpárra jól figyelj!
+
+Ha készen állsz, szólj a kísérlet vezetőjének!

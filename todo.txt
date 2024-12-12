@@ -1,0 +1,18 @@
+- milyen hosszú legyen? --> legyen blokkositva, és a végén legyen a familiarity test is!
+    - 144 scene
+    - 3 + 1 sec / scene
+    - total: 144*4 = 576 sec = 9.6 min
+    - 8 x 72 sec blokkok, egy blokkban 18 scene
+- melyik verziója a boundarynak? --> reflective
+- hogyan mozogjon a blob, mekkora legyen? --> kb. ahogy most van
+- hogyan legyen az adatfelvétel? --> MADSz
+
+- lehet, hogy lehetne úgy a 2D elemzés, hogy egyszerűen direktben távolság van véve a target és a tracking között?
+
+
+- hol tölt több időt a blob a két verzióban
+    - ugrásmérettel hogyan változik?
+
+- instrukciók
+    - v2: legyen a következő körben kétszeres mutatása a trialoknak
+    (- v3: "kövesd de figyelj is") 

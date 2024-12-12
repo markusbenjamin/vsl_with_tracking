@@ -1,0 +1,7 @@
+GYAKORISÁGI TESZT
+
+Most a teszt utolsó része következik. Összesen 8 próbát fogsz hallani. Minden próba során két hang fog megszólalni egymás után (Az 1. hang után a 2. hang). A hangok között lesz egy rövid szünet. A feladatod az lesz, hogy a vizsgálat első részében hallott hangsorozat alapján döntsd el, hogy a két hang közül melyiket hallottad GYAKRABBAN. Ha úgy gondolod, hogy az első hangot hallottad GYAKRABBAN, akkor az 1-es billentyűt nyomd le, míg ha úgy gondolod, hogy a második hangot hallottad GYAKRABBAN akkor a 2-es billentyűvel válaszolj. Más billentyű lenyomása nem lehetséges.
+
+Fontos, hogy minden hangra jól figyelj!
+
+Ha készen állsz, szólj a kísérlet vezetőjének!
