@@ -72,9 +72,9 @@ def draw_test_trial_or_intertrial():
     if is_intertrial:
         screen.fill((125, 125, 125))
 
-        draw_text(screen,'Melyik pár volt az ismerősebb?', offset = (0,-150),font = pygame.font.Font(pygame.font.match_font("arial"), 50))
-        draw_text(screen,'Ha az első, akkor nyomd meg az 1-es gombot,', offset = (0,125),font = pygame.font.Font(pygame.font.match_font("arial"), 50))
-        draw_text(screen,'ha a második, akkor pedig az 2-es gombot!', offset = (0,175),font = pygame.font.Font(pygame.font.match_font("arial"), 50))
+        draw_text(screen,'Melyik pár volt az ismerősebb?', offset = (0,-150),font = pygame.font.Font(pygame.font.match_font("arial"), int(50*font_size_corrector)))
+        draw_text(screen,'Ha az első, akkor nyomd meg az 1-es gombot,', offset = (0,125),font = pygame.font.Font(pygame.font.match_font("arial"), int(50*font_size_corrector)))
+        draw_text(screen,'ha a második, akkor pedig az 2-es gombot!', offset = (0,175),font = pygame.font.Font(pygame.font.match_font("arial"), int(50*font_size_corrector)))
     else:
         screen.fill((255, 255, 255))
         if test_phase_trial_stage in (1,3):
@@ -203,10 +203,11 @@ if __name__ == "__main__":
             instructions = file.read()
 
         # Set grid dimensions
-        viewing_dist = 50 # cm
+        viewing_dist = 75 # cm
         used_monitor_no = 0 # The one the experiment runs on
         primary_monitor_no = 0 # The one treated as primary by the OS (on Win this has the detailed start menu for example)
         ppc = get_monitor_ppcs()[used_monitor_no] # Pixel density of used monitor in pixels per centimeters
+        font_size_corrector = ppc/63 # So that the text shown will be the same relative size as on the dev machine
         shape_size_in_visual_angles = 0.1
         shape_size = visual_angles_to_pixels(shape_size_in_visual_angles, ppc, viewing_dist)
         cell_num = 3
@@ -292,6 +293,9 @@ if __name__ == "__main__":
         #region Experiment settings
         trial_duration = 3 if phase == '1' else 2 # In secs
         intertrial_duration = 1 if phase == '1' else 0.5 # In secs
+        if series == 'test':
+            trial_duration /= 10
+            intertrial_duration /= 10
         trial_num_per_block = 18 # (3+1)*144 = 576's divisors: [1, 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 64, 72, 96, 144, 192, 288, 576]
         
         random_start_pos_for_target = False
@@ -400,10 +404,10 @@ if __name__ == "__main__":
                 if stage == 'instructions':
                     if phase == '1': # Familiarization phase
                         screen.fill((125, 125, 125))
-                        draw_text(screen,'A most következő kísérletben egy mozgó fehér foltot fogsz látni egy háttér előtt.', offset = (0,-450),font = pygame.font.Font(pygame.font.match_font("arial"), 50))
-                        draw_text(screen,'A feladat, hogy a mozgó fehér folt közepét a lehető legpontosabban kövesd az egérrel.', offset = (0,-350),font = pygame.font.Font(pygame.font.match_font("arial"), 50))
-                        draw_text(screen,'Szólj a kísérletvezetőnek, aki szóban is el fogja mondani a feladatot, utána tudod elkezdeni.', offset = (0,-250),font = pygame.font.Font(pygame.font.match_font("arial"), 50))
-                        draw_text(screen,'A kezdéskor a folt pontosan a képernyő közepén lesz.', offset = (0,-150),font = pygame.font.Font(pygame.font.match_font("arial"), 50))
+                        draw_text(screen,'A most következő kísérletben egy mozgó fehér foltot fogsz látni egy háttér előtt.', offset = (0,-450),font = pygame.font.Font(pygame.font.match_font("arial"), int(50*font_size_corrector)))
+                        draw_text(screen,'A feladat, hogy a mozgó fehér folt közepét a lehető legpontosabban kövesd az egérrel.', offset = (0,-350),font = pygame.font.Font(pygame.font.match_font("arial"), int(50*font_size_corrector)))
+                        draw_text(screen,'Szólj a kísérletvezetőnek, aki szóban is el fogja mondani a feladatot, utána tudod elkezdeni.', offset = (0,-250),font = pygame.font.Font(pygame.font.match_font("arial"), int(50*font_size_corrector)))
+                        draw_text(screen,'A kezdéskor a folt pontosan a képernyő közepén lesz.', offset = (0,-150),font = pygame.font.Font(pygame.font.match_font("arial"), int(50*font_size_corrector)))
                         starter_circle_radius = 30 #
                         pygame.draw.circle(screen, (255, 255, 255), (window_size[0]//2, window_size[1]//2), starter_circle_radius, width = 5)
 
@@ -415,9 +419,9 @@ if __name__ == "__main__":
                             mouse_clicked = False
                     else: # Test phase
                         screen.fill((125, 125, 125))
-                        draw_text(screen,'Most ábrákat fogsz látni az előző részből, először egy ábrapárt, aztán egy másodikat.', offset = (0,-250),font = pygame.font.Font(pygame.font.match_font("arial"), 50))
-                        draw_text(screen,'A feladatod, hogy megválaszold, melyiket találod ismerősebbnek az előző rész alapján.', offset = (0,-150),font = pygame.font.Font(pygame.font.match_font("arial"), 50))
-                        draw_text(screen,'Szólj a kísérletvezetőnek, aki szóban is el fogja mondani a feladatot, utána tudod majd elkezdeni.', offset = (0,-50),font = pygame.font.Font(pygame.font.match_font("arial"), 50))
+                        draw_text(screen,'Most ábrákat fogsz látni az előző részből, először egy ábrapárt, aztán egy másodikat.', offset = (0,-250),font = pygame.font.Font(pygame.font.match_font("arial"), int(50*font_size_corrector)))
+                        draw_text(screen,'A feladatod, hogy megválaszold, melyiket találod ismerősebbnek az előző rész alapján.', offset = (0,-150),font = pygame.font.Font(pygame.font.match_font("arial"), int(50*font_size_corrector)))
+                        draw_text(screen,'Szólj a kísérletvezetőnek, aki szóban is el fogja mondani a feladatot, utána tudod majd elkezdeni.', offset = (0,-50),font = pygame.font.Font(pygame.font.match_font("arial"), int(50*font_size_corrector)))
                         draw_mouse(screen, mouse_pos)
                         pygame.display.flip()
                 
@@ -518,10 +522,10 @@ if __name__ == "__main__":
                         #endregion
                 elif stage == 'rest':
                     screen.fill((125, 125, 125))
-                    draw_text(screen,'Most egy rövid szünetet következik.', offset = (0,-450),font = pygame.font.Font(pygame.font.match_font("arial"), 40))
-                    draw_text(screen,'Engedd el az egeret és mozgasd át a kezed és az ujjaid.', offset = (0,-350),font = pygame.font.Font(pygame.font.match_font("arial"), 40))
-                    draw_text(screen,'Ha eleget pihentél, klikkelj a kör közepébe a folytatáshoz!', offset = (0,-250),font = pygame.font.Font(pygame.font.match_font("arial"), 60))
-                    draw_text(screen,'A kezdéskor a folt pontosan a képernyő közepén lesz.', offset = (0,-150),font = pygame.font.Font(pygame.font.match_font("arial"), 40))
+                    draw_text(screen,'Most egy rövid szünetet következik.', offset = (0,-450),font = pygame.font.Font(pygame.font.match_font("arial"), int(40*font_size_corrector)))
+                    draw_text(screen,'Engedd el az egeret és mozgasd át a kezed és az ujjaid.', offset = (0,-350),font = pygame.font.Font(pygame.font.match_font("arial"), int(40*font_size_corrector)))
+                    draw_text(screen,'Ha eleget pihentél, klikkelj a kör közepébe a folytatáshoz!', offset = (0,-250),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
+                    draw_text(screen,'A kezdéskor a folt pontosan a képernyő közepén lesz.', offset = (0,-150),font = pygame.font.Font(pygame.font.match_font("arial"), int(40*font_size_corrector)))
                     starter_circle_radius = 30 #
                     pygame.draw.circle(screen, (255, 255, 255), (window_size[0]//2, window_size[1]//2), starter_circle_radius, width = 5)
 
@@ -540,9 +544,9 @@ if __name__ == "__main__":
                         np.savetxt(session_directory+'subject_responses.csv',(first_pres_list == subject_keypresses).astype(int), delimiter=',', fmt = '%d')
                         np.savetxt(session_directory+'first_pres_list.csv', first_pres_list.astype(int), delimiter=',', fmt = '%d')
                     screen.fill((125, 125, 125))
-                    draw_text(screen,'Köszönjük!', offset = (0,-120),font = pygame.font.Font(pygame.font.match_font("arial"), 60))
-                    draw_text(screen,'Vége a kísérlet első részének.' if phase == '1' else 'Vége a kísérletnek.', offset = (0,0),font = pygame.font.Font(pygame.font.match_font("arial"), 50))
-                    draw_text(screen,'Kattints a kilépéshez.', offset = (0,120),font = pygame.font.Font(pygame.font.match_font("arial"), 50))
+                    draw_text(screen,'Köszönjük!', offset = (0,-120),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
+                    draw_text(screen,'Vége a kísérlet első részének.' if phase == '1' else 'Vége a kísérletnek.', offset = (0,0),font = pygame.font.Font(pygame.font.match_font("arial"), int(50*font_size_corrector)))
+                    draw_text(screen,'Kattints a kilépéshez.', offset = (0,120),font = pygame.font.Font(pygame.font.match_font("arial"), int(50*font_size_corrector)))
                     draw_mouse(screen, mouse_pos)
                     pygame.display.flip()
             
