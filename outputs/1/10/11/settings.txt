@@ -1,7 +1,7 @@
 trial_duration: 3
 intertrial_duration: 1
 trial_num: 144
-trial_num_per_block: 5
+trial_num_per_block: 18
 random_start_pos_for_target: False
 shape_size_in_visual_angles: 0.1
 std_pos_in_visual_angles: 0.04
