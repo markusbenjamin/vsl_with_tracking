@@ -88,32 +88,44 @@ def lqg_model(x):
 
 data_path = "C:/Users/Beno/Documents/CEU/continuous_psychophysics/vsl_with_tracking/outputs"
 data_path = os.path.abspath(os.path.join(os.getcwd(), "..", "outputs"))
+#region Main execution setup
+if __name__ == "__main__":
+    # Configuration moved to main block
+    jax.config.update("jax_platform_name", "cpu")
+    jax.config.update("jax_enable_x64", True)
+    cpu_count = mp.cpu_count()
+    print(f"Using {cpu_count} CPU cores.")
+    numpyro.set_host_device_count(cpu_count)
 
-def do_mcmc_for_one_subject(series, subject):
-    subject_path = f"{data_path}/{series}/{subject}"
+    # Define worker initializer for parallel processes
+    def init_worker():
+        jax.config.update("jax_platform_name", "cpu")
+        jax.config.update("jax_enable_x64", True)
+        numpyro.set_host_device_count(1)  # Each process uses 1 CPU thread
 
-    data_by_blocks = load_data(f"{subject_path}/tracking.txt")
+    # Modify MCMC function to use subject-specific random seed
+    def do_mcmc_for_one_subject(series, subject):
+        subject_path = f"{data_path}/{series}/{subject}"
+        data_by_blocks = load_data(f"{subject_path}/tracking.txt")
+        data = jnp.array(
+            [chunk for v in data_by_blocks.values() for chunk in jnp.split(v[: (len(v) // 1000) * 1000], len(v) // 1000)]
+        ).reshape(-1, 1000, 4)
 
-    data = jnp.array(
-        [chunk for v in data_by_blocks.values() for chunk in jnp.split(v[: (len(v) // 1000) * 1000], len(v) // 1000)]
-    ).reshape(-1, 1000, 4)  # Ensure the correct shape
+        print(f"Start subject {subject}, data shape: {data.shape}.")
+        nuts_kernel = NUTS(lqg_model)
+        mcmc = MCMC(nuts_kernel, num_warmup=250, num_samples=500, num_chains=2)
+        
+        # Use subject-specific PRNGKey
+        mcmc.run(random.PRNGKey(subject), data)  # Changed seed to use subject ID
+        
+        mcmc_results = az.from_numpyro(mcmc)
+        mcmc_results.to_netcdf(f"{subject_path}/mcmc_results_2.nc")
+        print(f'MCMC results saved for subject {subject}.')
 
-    print(f"Start subject {subject}, data shape: {data.shape}.")
+    # Create parallel tasks and execute
+    with mp.Pool(processes=cpu_count, initializer=init_worker) as pool:
+        # Create arguments list: [(series=1, subject=7), (1,8), ..., (1,15)]
+        tasks = [(1, subject) for subject in range(7, 16)]
+        pool.starmap(do_mcmc_for_one_subject, tasks)
 
-    nuts_kernel = NUTS(lqg_model)
-
-    mcmc = MCMC(nuts_kernel, num_warmup=250, num_samples=500, num_chains=2)
-    mcmc.run(random.PRNGKey(0), data)
-
-    print(f'MCMC finished for subject {subject}.')
-
-    mcmc_results = az.from_numpyro(mcmc)
-    mcmc_results.to_netcdf(f"{subject_path}/mcmc_results_2.nc")
-
-    print(f'MCMC results saved for subject {subject}.')
-
-import warnings
-warnings.filterwarnings("ignore", message="invalid value encountered in subtract")
-
-for subject in range(7, 16):
-    do_mcmc_for_one_subject(1, subject)
+    print("All subjects processed in parallel.")
