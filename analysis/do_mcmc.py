@@ -29,6 +29,14 @@ jax.config.update("jax_platform_name", "cpu")
 jax.config.update("jax_enable_x64", True)
 numpyro.set_host_device_count(12)
 
+#jax.config.update("jax_platform_name", "gpu")  # Use GPU instead of CPU
+#jax.config.update("jax_enable_x64", True)
+
+#device_count = jax.device_count()  # Auto-detect GPUs
+#cpu_count = mp.cpu_count()  # Detect available CPUs
+#
+#numpyro.set_host_device_count(device_count if jax.devices()[0].device_kind == "gpu" else cpu_count)
+
 #endregion
 
 #region Utility functions
@@ -81,6 +89,7 @@ def lqg_model(x):
 #endregion
 
 data_path = "C:/Users/Beno/Documents/CEU/continuous_psychophysics/vsl_with_tracking/outputs"
+data_path = os.path.abspath(os.path.join(os.getcwd(), "..", "outputs"))
 
 def do_mcmc_for_one_subject(series, subject):
     subject_path = f"{data_path}/{series}/{subject}"
