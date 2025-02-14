@@ -24,18 +24,16 @@ from lqg.tracking.basic import TrackingTask
 
 import multiprocessing as mp  # Needed for CPU count
 
-# Configure JAX to use all available CPU cores
-#jax.config.update("jax_platform_name", "cpu")
-#jax.config.update("jax_enable_x64", True)
-#numpyro.set_host_device_count(12)
-
-jax.config.update("jax_platform_name", "gpu")  # Use GPU instead of CPU
+# Force JAX to run on CPU instead of GPU
+jax.config.update("jax_platform_name", "cpu")
 jax.config.update("jax_enable_x64", True)
 
-device_count = jax.device_count()  # Auto-detect GPUs
-cpu_count = mp.cpu_count()  # Detect available CPUs
-#
-numpyro.set_host_device_count(device_count if jax.devices()[0].device_kind == "gpu" else cpu_count)
+# Get available CPU cores (should return 32)
+cpu_count = mp.cpu_count()
+print(f"Using {cpu_count} CPU cores.")
+
+# Set NumPyro to fully use all CPU threads
+numpyro.set_host_device_count(cpu_count)
 
 #endregion
 
@@ -117,39 +115,5 @@ def do_mcmc_for_one_subject(series, subject):
 import warnings
 warnings.filterwarnings("ignore", message="invalid value encountered in subtract")
 
-for subject in range(6, 16):
+for subject in range(7, 16):
     do_mcmc_for_one_subject(1, subject)
-
-"""
-
-if False:
-    x_target = data[:,0]
-    y_target = data[:,1]
-    x_tracking = data[:,2]
-    y_tracking = data[:,3]
-
-    plt.plot(x_target, y_target, label="Target Path (x, y)")
-    plt.plot(x_tracking, y_tracking, label="Tracking Path (x, y)")
-    plt.legend()
-    plt.xlabel("X Coordinate")
-    plt.ylabel("Y Coordinate")
-    plt.title("2D Tracking and Target Data")
-    plt.show()
-
-if False:
-    vel_x_target = jnp.array([jnp.diff(x_target)])
-    vel_y_target = jnp.array([jnp.diff(y_target)])
-    vel_x_tracking = jnp.array([jnp.diff(x_tracking)])
-    vel_y_tracking = jnp.array([jnp.diff(y_tracking)])
-
-    x_lags, x_correls = xcorr(vel_x_tracking, vel_x_target, maxlags=120)
-    y_lags, y_correls = xcorr(vel_y_tracking, vel_y_target, maxlags=120)
-
-    plt.plot(x_lags, x_correls.mean(axis=0), label="X coordinate")
-    plt.plot(y_lags, y_correls.mean(axis=0), label="Y coordinate")
-    plt.xlabel("Lag [s]")
-    plt.ylabel("Cross-correlation")
-    plt.title("2D cross-correlogram")
-    plt.show()
-
-"""
