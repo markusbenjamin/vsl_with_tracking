@@ -101,7 +101,7 @@ if __name__ == "__main__":
     def init_worker():
         jax.config.update("jax_platform_name", "cpu")
         jax.config.update("jax_enable_x64", True)
-        numpyro.set_host_device_count(1)  # Each process uses 1 CPU thread
+        numpyro.set_host_device_count(8)  # Each process uses 1 CPU thread
 
     # Modify MCMC function to use subject-specific random seed
     def do_mcmc_for_one_subject(series, subject):
