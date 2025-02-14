@@ -91,17 +91,22 @@ data_path = os.path.abspath(os.path.join(os.getcwd(), "..", "outputs"))
 #region Main execution setup
 if __name__ == "__main__":
     # Configuration moved to main block
-    jax.config.update("jax_platform_name", "cpu")
-    jax.config.update("jax_enable_x64", True)
+    # Detect CPU count first
     cpu_count = mp.cpu_count()
+
+    # Configure JAX
+    jax.config.update("jax_platform_name", "cpu")  # Force CPU
+    jax.config.update("jax_enable_x64", True)  # Enable 64-bit precision
+
+    # Optimize thread parallelism dynamically
+    os.environ["XLA_FLAGS"] = f"--xla_cpu_multi_thread_eigen=true intra_op_parallelism_threads={cpu_count}"
+
     print(f"Using {cpu_count} CPU cores.")
-    numpyro.set_host_device_count(cpu_count)
 
     # Define worker initializer for parallel processes
     def init_worker():
-        jax.config.update("jax_platform_name", "cpu")
-        jax.config.update("jax_enable_x64", True)
-        numpyro.set_host_device_count(8)  # Each process uses 1 CPU thread
+        #numpyro.set_host_device_count(8)
+        pass
 
     # Modify MCMC function to use subject-specific random seed
     def do_mcmc_for_one_subject(series, subject):
