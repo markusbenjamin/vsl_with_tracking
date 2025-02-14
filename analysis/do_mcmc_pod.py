@@ -105,8 +105,8 @@ if __name__ == "__main__":
 
     # Define worker initializer for parallel processes
     def init_worker():
-        #numpyro.set_host_device_count(8)
-        pass
+        numpyro.set_host_device_count(8)
+        #pass
 
     # Modify MCMC function to use subject-specific random seed
     def do_mcmc_for_one_subject(series, subject):
