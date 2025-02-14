@@ -1,22 +1,33 @@
 #region Imports
 import pandas as pd
+import linalg
 import io
+import os
 import jax.numpy as jnp
+from jax.random import PRNGKey, split
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import numpy as np
 
 mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.spines.top'] = False
 
-from jax import grad, vmap, jit, random, numpy as jnp
+import jax
+from jax import random, numpy as jnp
 
 import numpyro
 from numpyro import distributions as dist
 from numpyro.infer import NUTS, MCMC
 import arviz as az
 
-from lqg import LQG, Actor, Dynamics, System
-from lqg import xcorr
+from lqg.tracking.basic import TrackingTask
+
+import multiprocessing as mp  # Needed for CPU count
+
+# Configure JAX to use all available CPU cores
+jax.config.update("jax_platform_name", "cpu")
+jax.config.update("jax_enable_x64", True)
+numpyro.set_host_device_count(12)
 
 #endregion
 
@@ -47,39 +58,7 @@ def load_data(file_path):
     return {k: jnp.array(v) for k, v in block_dict.items()}
 #endregion
 
-#region MCMC functions
-
-class BoundedActor(LQG):
-    def __init__(
-            self, 
-            sigma_target, 
-            action_variability, 
-            action_cost, 
-            sigma_cursor,
-            T
-            ):
-
-        dt = 1. / 60.
-
-        A = jnp.eye(2)
-        B = jnp.array([[0.], 
-                      [dt]])
-
-        V = jnp.diag(jnp.array([1., action_variability]))
-
-        F = jnp.eye(2)
-        W = jnp.diag(jnp.array([sigma_target, sigma_cursor]))
-
-
-        Q = jnp.array([[1., -1.],
-                      [-1., 1]])
-
-        R = jnp.eye(1) * action_cost
-
-        T = T
-
-        super().__init__(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
-
+#region LQG functions
 def lqg_model(x):
     # priors
     action_variability = numpyro.sample("action_variability", dist.HalfCauchy(1.))
@@ -87,17 +66,18 @@ def lqg_model(x):
     sigma_target = numpyro.sample("sigma_target", dist.HalfCauchy(50.))
     sigma_cursor = numpyro.sample("sigma_cursor", dist.HalfCauchy(15.))
 
-    model = BoundedActor(
-        action_variability=action_variability,
-        action_cost=action_cost,
-        sigma_target=sigma_target,
-        sigma_cursor=sigma_cursor,
+    model = TrackingTask(
+        dim = 2,
+        action_variability = action_variability,
+        action_cost = action_cost,
+        sigma_target = sigma_target,
+        sigma_cursor = sigma_cursor,
+        dt = 1. / 60,
         T = (x.shape)[1]
     )
 
     # likelihood
     numpyro.sample("x", model.conditional_distribution(x), obs=x[:, 1:])
-
 #endregion
 
 data_path = "C:/Users/Beno/Documents/CEU/continuous_psychophysics/vsl_with_tracking/outputs"
@@ -115,18 +95,20 @@ def do_mcmc_for_one_subject(series, subject):
 
     nuts_kernel = NUTS(lqg_model)
 
-    mcmc = MCMC(nuts_kernel, num_warmup=500, num_samples=1000)
+    mcmc = MCMC(nuts_kernel, num_warmup=250, num_samples=500, num_chains=2)
     mcmc.run(random.PRNGKey(0), data)
 
     print(f'MCMC finished for subject {subject}.')
 
     mcmc_results = az.from_numpyro(mcmc)
-    mcmc_results.to_netcdf(f"{subject_path}/mcmc_results.nc")
+    mcmc_results.to_netcdf(f"{subject_path}/mcmc_results_2.nc")
 
     print(f'MCMC results saved for subject {subject}.')
 
+import warnings
+warnings.filterwarnings("ignore", message="invalid value encountered in subtract")
 
-for subject in range(1, 16):
+for subject in range(6, 16):
     do_mcmc_for_one_subject(1, subject)
 
 """
@@ -161,16 +143,4 @@ if False:
     plt.title("2D cross-correlogram")
     plt.show()
 
-inference_data = az.from_netcdf("inference_data.nc")
-from scipy.stats import mode
-
-posterior = inference_data.posterior
-
-map_estimates = {
-    var: mode(posterior[var].values, axis=1, keepdims=False).mode.squeeze()  # Compute mode along draws
-    for var in posterior.data_vars
-}
-
-
-print(map_estimates)
 """
