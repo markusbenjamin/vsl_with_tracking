@@ -15,6 +15,17 @@ from screeninfo import get_monitors
 #endregion
 
 #region Misc utils
+def get_full_monitor_specs():
+    """
+    Returns the pixel density per cm for all the monitors.
+    """
+    ppcs = []
+    for monitor in get_monitors():
+        ppc_x = monitor.width / (monitor.width_mm / 25.4) / 2.54
+        ppc_y = monitor.height / (monitor.height_mm / 25.4) / 2.54
+        ppcs.append((ppc_x + ppc_y) / 2)  # Average pixels per cms
+    return ppcs
+
 def get_monitor_ppcs():
     """
     Returns the pixel density per cm for all the monitors.
@@ -395,6 +406,24 @@ def log(message, file_path, print_to_console = True):
         print(message)
     with open(file_path, 'a') as file:
         print(message, file=file)
+
+log_buffer = []  # Global buffer to store log lines
+
+def log_to_buffer(message, print_to_console = True):
+    """Appends a log entry to the buffer instead of writing it immediately."""
+    global log_buffer
+    if print_to_console:
+        print(message)
+    log_buffer.append(message)
+
+
+def export_log_buffer(file_path):
+    """Calls the existing log() function for each buffered entry, only if buffer is not empty."""
+    global log_buffer
+    if log_buffer:  # Only proceed if there's something to write
+        for line in log_buffer:
+            log(line, file_path, False)
+        log_buffer.clear()  # Clear the buffer after writing
 
 #endregion
 

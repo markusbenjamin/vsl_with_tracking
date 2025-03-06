@@ -482,10 +482,9 @@ if __name__ == "__main__":
                             increment_stage()
                         #endregion
                         
-                        #region Save data
-                        log(
+                        #region Write data to log buffer
+                        log_to_buffer(
                             f"{pygame.time.get_ticks()},{block},{trial},{scene},{trial_data['shapes']},{trial_data['positions']},{int(target_pos[0])},{int(target_pos[1])},{mouse_pos[0]},{mouse_pos[1]}",
-                            data_file_path,
                             verbose_logging
                             )
                         #endregion
@@ -525,6 +524,7 @@ if __name__ == "__main__":
                             increment_stage()
                         #endregion
                 elif stage == 'rest':
+                    export_log_buffer(data_file_path)
                     screen.fill((125, 125, 125))
                     draw_text(screen,'Most egy rövid szünetet következik.', offset = (0,-450),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
                     draw_text(screen,'Engedd el az egeret és mozgasd át a kezed és az ujjaid.', offset = (0,-350),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
@@ -566,7 +566,9 @@ if __name__ == "__main__":
         """
         Treat exceptions here.
         """
-        traceback.print_exc()
+        print(e)
+        pass
+        #traceback.print_exc()
     finally:
         """
         Export data here upon error.
