@@ -524,7 +524,6 @@ if __name__ == "__main__":
                             increment_stage()
                         #endregion
                 elif stage == 'rest':
-                    export_log_buffer(data_file_path)
                     screen.fill((125, 125, 125))
                     draw_text(screen,'Most egy rövid szünetet következik.', offset = (0,-450),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
                     draw_text(screen,'Engedd el az egeret és mozgasd át a kezed és az ujjaid.', offset = (0,-350),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
@@ -535,6 +534,8 @@ if __name__ == "__main__":
 
                     draw_mouse(screen, mouse_pos)
                     pygame.display.flip()
+
+                    export_log_buffer(data_file_path)
             
                     if (mouse_pos[0] - window_size[0]//2) ** 2 + (mouse_pos[1] - window_size[1]//2) ** 2 <= starter_circle_radius ** 2 and mouse_clicked:
                         block += 1

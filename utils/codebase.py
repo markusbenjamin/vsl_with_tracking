@@ -421,8 +421,9 @@ def export_log_buffer(file_path):
     """Calls the existing log() function for each buffered entry, only if buffer is not empty."""
     global log_buffer
     if log_buffer:  # Only proceed if there's something to write
-        for line in log_buffer:
-            log(line, file_path, False)
+        with open(file_path, "a", encoding="utf-8") as file:
+            for line in log_buffer:
+                file.write(line + "\n")
         log_buffer.clear()  # Clear the buffer after writing
 
 #endregion
