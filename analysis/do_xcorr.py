@@ -94,5 +94,5 @@ def do_xcorr(series, subject):
         })
     json.dump(xcorr_by_block, open(f"{subject_path}/xcorr_by_block.json", "w"), default=lambda x: x.tolist() if isinstance(x, np.ndarray) else x)
 
-for subject in range(1, 16):
+for subject in range(20, 25):
     do_xcorr(1, subject)

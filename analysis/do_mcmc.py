@@ -1,5 +1,5 @@
 #region Imports
-import pandas as pd
+import csv
 import linalg
 import io
 import os
@@ -20,7 +20,7 @@ from numpyro import distributions as dist
 from numpyro.infer import NUTS, MCMC
 import arviz as az
 
-from lqg.tracking.basic import TrackingTask
+from lqg.tracking.basic import TrackingTask, BoundedTrackingTask
 
 import multiprocessing as mp  # Needed for CPU count
 
@@ -41,28 +41,36 @@ numpyro.set_host_device_count(12)
 
 #region Utility functions
 def load_data(file_path):
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-    
-    # Filter lines that contain valid CSV rows (assuming at least 9 columns, adjust if needed)
-    valid_lines = [line for line in lines if line.count(",") >= 4]  # Adjust based on actual column count
-    
-    # Read the filtered lines into a DataFrame
-    data = pd.read_csv(io.StringIO("".join(valid_lines)))
-
-    # Extract relevant columns
-    relevant_columns = ["Block", "Tracked_x", "Tracked_y", "Mouse_x", "Mouse_y"]
-    data = data[relevant_columns]
-
-    # Convert to dictionary: {block: [[Tracked_x, Tracked_y, Mouse_x, Mouse_y], ...]}
     block_dict = {}
-    for _, row in data.iterrows():
-        block = row["Block"]
-        values = row[1:].tolist()  # Strip 'Block' column
-        if block not in block_dict:
-            block_dict[block] = []
-        block_dict[block].append(values)
-
+    required_keys = {"Block", "Tracked_x", "Tracked_y", "Mouse_x", "Mouse_y"}
+    
+    with open(file_path, 'r') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            # Check if row contains all required keys
+            if not required_keys.issubset(row.keys()):
+                continue
+            
+            block = row["Block"]
+            try:
+                # Convert values to floats (or ints, if appropriate)
+                target_x = float(row["Tracked_x"])
+                target_y = float(row["Tracked_y"])
+                tracking_x = float(row["Mouse_x"])
+                tracking_y = float(row["Mouse_y"])
+            except ValueError:
+                # Skip rows with non-numeric data
+                continue
+            
+            # Rearrange the order to [target_x, tracking_x, target_y, tracking_y]
+            values = [target_x, tracking_x, target_y, tracking_y]
+            
+            # Group by block
+            if block not in block_dict:
+                block_dict[block] = []
+            block_dict[block].append(values)
+    
+    # Convert lists to JAX arrays
     return {k: jnp.array(v) for k, v in block_dict.items()}
 #endregion
 
@@ -77,21 +85,44 @@ def lqg_model(x):
     model = TrackingTask(
         dim = 2,
         action_variability = action_variability,
-        action_cost = action_cost,
-        sigma_target = sigma_target,
+        action_cost = action_cost, # experiment with this
+        sigma_target = sigma_target, # perception!
         sigma_cursor = sigma_cursor,
-        dt = 1. / 60,
+        dt =  1. / 60,#3. / 50,
         T = (x.shape)[1]
     )
 
     # likelihood
+    numpyro.sample("x", model.conditional_distribution(x), obs=x[:, 1:])
+
+def bounded_lqg_model(x):
+    # Priors for model parameters
+    action_variability = numpyro.sample("action_variability", dist.HalfCauchy(1.))
+    action_cost = numpyro.sample("action_cost", dist.HalfCauchy(1.))
+    sigma_target = numpyro.sample("sigma_target", dist.HalfCauchy(50.))
+    sigma_cursor = numpyro.sample("sigma_cursor", dist.HalfCauchy(15.))
+    
+    # Instantiate BoundedTrackingTask with explicit boundaries
+    model = BoundedTrackingTask(
+        dim=2,
+        target_min=[452, 1476],    # Explicit boundaries for each dimension
+        target_max=[24, 1044],
+        action_variability=action_variability,
+        action_cost=action_cost,
+        sigma_target=sigma_target,
+        sigma_cursor=sigma_cursor,
+        dt=1./60,
+        T=x.shape[1]
+    )
+    
+    # Likelihood: use the modified conditional_distribution for reflective transitions
     numpyro.sample("x", model.conditional_distribution(x), obs=x[:, 1:])
 #endregion
 
 data_path = "C:/Users/Beno/Documents/CEU/continuous_psychophysics/vsl_with_tracking/outputs"
 data_path = os.path.abspath(os.path.join(os.getcwd(), "..", "outputs"))
 
-def do_mcmc_for_one_subject(series, subject):
+def do_mcmc_for_one_subject(series, subject, run):
     subject_path = f"{data_path}/{series}/{subject}"
 
     data_by_blocks = load_data(f"{subject_path}/tracking.txt")
@@ -102,6 +133,7 @@ def do_mcmc_for_one_subject(series, subject):
 
     print(f"Start subject {subject}, data shape: {data.shape}.")
 
+    #nuts_kernel = NUTS(lqg_model)
     nuts_kernel = NUTS(lqg_model)
 
     mcmc = MCMC(nuts_kernel, num_warmup=250, num_samples=500, num_chains=2)
@@ -110,15 +142,15 @@ def do_mcmc_for_one_subject(series, subject):
     print(f'MCMC finished for subject {subject}.')
 
     mcmc_results = az.from_numpyro(mcmc)
-    mcmc_results.to_netcdf(f"{subject_path}/mcmc_results_2.nc")
+    mcmc_results.to_netcdf(f"{subject_path}/mcmc_results_{run}.nc")
 
     print(f'MCMC results saved for subject {subject}.')
 
 import warnings
 warnings.filterwarnings("ignore", message="invalid value encountered in subtract")
 
-for subject in range(6, 16):
-    do_mcmc_for_one_subject(1, subject)
+for subject in range(21, 25):
+    do_mcmc_for_one_subject(1, subject,"3")
 
 """
 

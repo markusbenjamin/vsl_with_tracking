@@ -120,7 +120,8 @@ def increment_stage():
         stage = 'trials'
     elif stage == 'trials':
         if all_trials_shown() or series == 'demo':
-            export_log_buffer(data_file_path) # Save last block
+            if phase == '1':
+                export_log_buffer(data_file_path) # Save last block
             stage = 'thanks'
         else:
             stage = 'rest'
@@ -174,7 +175,7 @@ if __name__ == "__main__":
                 if phase in ('1', '2'):
                     break
             ## Set repetition of familiarization phase
-            #if phase == '1':
+            #if '1':
             #    while True:
             #        familiarization_trial_repetition = input('How many repetitions for the familiarization trials? ')
             #        if familiarization_trial_repetition.isdigit():
@@ -191,14 +192,18 @@ if __name__ == "__main__":
             #else:
             #    subphase = ''
 
-            while True:
-                observation_condition_type = int(input('Include observation blocks? (0 - None, 1 - First half, 2 - Second half, 3 - All) '))
-                if observation_condition_type in (0,1,2,3):
-                    break
-            while True:
-                target_type = int(input('Target? (1 - Blob, 2 - Ring) '))
-                if target_type in (1,2):
-                    break
+            if phase == '1':
+                while True:
+                    observation_condition_type = int(input('Include observation blocks? (0 - None, 1 - First half, 2 - Second half, 3 - All) '))
+                    if observation_condition_type in (0,1,2,3):
+                        break
+                while True:
+                    target_type = int(input('Target? (1 - Blob, 2 - Ring) '))
+                    if target_type in (1,2):
+                        break
+            else:
+                observation_condition_type = -1
+                target_type = -1
 
         random_pres = True
 
