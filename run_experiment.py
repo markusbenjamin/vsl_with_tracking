@@ -55,9 +55,9 @@ def draw_familiarization_trial_or_intertrial(observation, target_type):
         x=window_size[0]//2, y=window_size[1]//2, 
         mask=noise_mask_1
         )
-    if target_type == 'blob':
+    if target_type == 1:
         draw_gaussian_blob(screen, target_blob, target_pos[0], target_pos[1])
-    elif target_type == 'ring':
+    elif target_type == 2:
         #draw_gaussian_ring(screen, target_ring, target_pos[0], target_pos[1])
         draw_pulsating_ring(screen, target_ring, target_pos[0], target_pos[1], pygame.time.get_ticks() / 1000)
     draw_blended_noise_mask(
@@ -135,7 +135,7 @@ def all_trials_shown():
         return False
 
 if __name__ == "__main__":
-    try:
+    #try:
         """
         Run all code here.
         """
@@ -156,13 +156,8 @@ if __name__ == "__main__":
         else:
             # Get Series and Subject ID
             series = input('Series: ')
-            while True:
-                observation_condition_type = int(input('Include observation blocks? (0 - None, 1 - First half, 2 - Second half, 3 - All) '))
-                if observation_condition_type in (0,1,2,3):
-                    break
             subject_ID = input('Subject ID: ')
             exp = '1'
-            #phase = '1'
             familiarization_trial_repetition = -1
             subphase = ''
 
@@ -195,6 +190,15 @@ if __name__ == "__main__":
             #            break
             #else:
             #    subphase = ''
+
+            while True:
+                observation_condition_type = int(input('Include observation blocks? (0 - None, 1 - First half, 2 - Second half, 3 - All) '))
+                if observation_condition_type in (0,1,2,3):
+                    break
+            while True:
+                target_type = int(input('Target? (1 - Blob, 2 - Ring) '))
+                if target_type in (1,2):
+                    break
 
         random_pres = True
 
@@ -326,6 +330,7 @@ if __name__ == "__main__":
             'trial_num_per_block':trial_num_per_block,
             'random_start_pos_for_target':random_start_pos_for_target,
             'observation_condition':['none','first half','second half','all'][observation_condition_type],
+            'target_type':['blob','ring'][target_type-1],
             'shape_size_in_visual_angles':shape_size_in_visual_angles,
             'std_pos_in_visual_angles':std_pos_in_visual_angles,
             'std_vel_in_visual_angles':std_vel_in_visual_angles,
@@ -426,10 +431,24 @@ if __name__ == "__main__":
                 if stage == 'instructions':
                     if phase == '1': # Familiarization phase
                         screen.fill((125, 125, 125))
-                        draw_text(screen,'A most következő kísérletben egy mozgó fehér foltot fogsz látni egy háttér előtt.', offset = (0,-450),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
-                        draw_text(screen,'A feladat, hogy a mozgó fehér folt közepét a lehető legpontosabban kövesd az egérrel.', offset = (0,-350),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector))) # DEV
+                        draw_text(screen,f'A most következő kísérletben egy mozgó fehér {'foltot' if target_type == 1 else 'kört'} fogsz látni egy változó háttér előtt.', offset = (0,-450),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
+                        
+                        if observation_condition_type == 0:
+                            # nincs obs
+                            draw_text(screen,f'A feladat, hogy a mozgó fehér {'folt' if target_type == 1 else 'kör'} közepét a lehető legpontosabban kövesd az egérrel.', offset = (0,-350),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
+                        elif observation_condition_type == 1:
+                            # első fele obs
+                            draw_text(screen,f'A feladat, hogy a háttérben lévő ábrákat megfigyeld. A rajtuk mozgó {'folttal' if target_type == 1 else 'körrel'} ne foglalkozz.', offset = (0,-350),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
+                        elif observation_condition_type == 2:
+                            #második fele obs
+                            draw_text(screen,f'A feladat, hogy a mozgó fehér {'folt' if target_type == 1 else 'kör'} közepét a lehető legpontosabban kövesd az egérrel.', offset = (0,-350),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
+                        elif observation_condition_type == 3:
+                            # csak obs
+                            draw_text(screen,f'A feladat, hogy a háttérben lévő ábrákat megfigyeld. A rajtuk mozgó {'folttal' if target_type == 1 else 'körrel'} ne foglalkozz.', offset = (0,-350),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
+                        
                         draw_text(screen,'Szólj a kísérletvezetőnek, aki szóban is el fogja mondani a feladatot, utána tudod elkezdeni.', offset = (0,-250),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
-                        draw_text(screen,'A kezdéskor a folt pontosan a képernyő közepén lesz.', offset = (0,-150),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
+                        if observation_condition_type == 1 or observation_condition_type == 3:
+                            draw_text(screen,f'A kezdéskor a {'folt' if target_type == 1 else 'kör'} pontosan a képernyő közepén lesz.', offset = (0,-150),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
                         starter_circle_radius = 30 #
                         pygame.draw.circle(screen, (255, 255, 255), (window_size[0]//2, window_size[1]//2), starter_circle_radius, width = 5)
 
@@ -478,7 +497,7 @@ if __name__ == "__main__":
                         
                         #region Draw
                         screen.fill((255, 255, 255))
-                        draw_familiarization_trial_or_intertrial(is_observation_block(block,observation_condition_type),'ring')
+                        draw_familiarization_trial_or_intertrial(is_observation_block(block,observation_condition_type),target_type)
                         #endregion
                         
                         #region Update iteration
@@ -543,10 +562,28 @@ if __name__ == "__main__":
                         #endregion
                 elif stage == 'rest':
                     screen.fill((125, 125, 125))
-                    draw_text(screen,'Most egy rövid szünetet következik.', offset = (0,-450),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
-                    draw_text(screen,'Engedd el az egeret és mozgasd át a kezed és az ujjaid.', offset = (0,-350),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
-                    draw_text(screen,'Ha eleget pihentél, klikkelj a kör közepébe a folytatáshoz!', offset = (0,-250),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
-                    draw_text(screen,'A kezdéskor a folt pontosan a képernyő közepén lesz.', offset = (0,-150),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector))) # DEV
+
+                    if is_observation_block(block,observation_condition_type) == is_observation_block(block + 1, observation_condition_type):
+                        # nem változik a feladat a következő blokkban
+                        draw_text(screen,'Most egy rövid szünet következik.', offset = (0,-450),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
+                        if is_observation_block(block,observation_condition_type):
+                            # ha obs volt, csak várjon kicsit
+                            draw_text(screen,'Számolj el magadban tízig, és utána klikkelj a gyűrű közepébe a folytatáshoz!', offset = (0,-250),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
+                        else:
+                            # ha tracking volt, pihenjen
+                            draw_text(screen,'Engedd el az egeret és mozgasd át a kezed és az ujjaid.', offset = (0,-350),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
+                            draw_text(screen,'Ha eleget pihentél, klikkelj a gyűrű közepébe a folytatáshoz!', offset = (0,-250),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
+                    else: # ha változik a feladat a következő blokkban
+                        draw_text(screen,'FIGYELEM! Most megváltozik, hogy mi a feladatod!', offset = (0,-450),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
+                        
+                        if is_observation_block(block + 1, observation_condition_type):
+                            # ha a következő blokkban obsra változik a feladat
+                            draw_text(screen,f'Mostantól csak az a feladat, hogy a háttérben lévő ábrákat megfigyeld. A rajtuk mozgó {'folttal' if target_type == 1 else 'körrel'} ne foglalkozz.', offset = (0,-350),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
+                        else:
+                            # ha a következő blokkban trackingra változik a feladat
+                            draw_text(screen,f'Mostantól az a feladat, hogy a mozgó fehér {'folt' if target_type == 1 else 'kör'} közepét a lehető legpontosabban kövesd az egérrel.', offset = (0,-350),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
+                        draw_text(screen,'FONTOS: Még ne indítsd el! Szólj a kísérletvezetőnek!', offset = (0,-250),font = pygame.font.Font(pygame.font.match_font("arial"), int(60*font_size_corrector)))
+                    
                     starter_circle_radius = 30 #
                     pygame.draw.circle(screen, (255, 255, 255), (window_size[0]//2, window_size[1]//2), starter_circle_radius, width = 5)
 
@@ -581,15 +618,15 @@ if __name__ == "__main__":
             exit()
         #endregion
 
-    except Exception as e:
-        """
-        Treat exceptions here.
-        """
-        print(e)
-        pass
-        #traceback.print_exc()
-    finally:
-        """
-        Export data here upon error.
-        """
-        pass
+    #except Exception as e:
+    #    """
+    #    Treat exceptions here.
+    #    """
+    #    print(e)
+    #    pass
+    #    #traceback.print_exc()
+    #finally:
+    #    """
+    #    Export data here upon error.
+    #    """
+    #    pass
