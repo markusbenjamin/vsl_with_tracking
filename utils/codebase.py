@@ -10,8 +10,10 @@ import traceback
 import pygame
 import sys
 import scipy.ndimage
+from scipy.special import erf
 import math
 from screeninfo import get_monitors
+import random
 #endregion
 
 #region Misc utils
@@ -392,6 +394,90 @@ def generate_gaussian_blob(size, min_size=0.1):
 
 def draw_gaussian_blob(screen,blob,x,y):
     screen.blit(blob, (x - blob.get_width() // 2, y - blob.get_height() // 2))
+
+def generate_gaussian_ring(ring_radius, ring_width, edge_sigma = 1, min_size=0.1):
+    """
+    Creates a ring with Gaussian edges (both inner and outer) and a random pulsation.
+    
+    Parameters:
+      - ring_radius: The center (mean) radius of the ring.
+      - ring_width: Nominal thickness of the ring.
+      - edge_sigma: Standard deviation controlling the smoothness of the Gaussian edges.
+      - min_size: Minimum size multiplier for the resulting surface (default 0.1).
+    
+    Returns:
+      A Pygame RGBA surface with the ring drawn on it.
+    """
+    # Define inner and outer radii (ensure the inner radius is nonnegative)
+    r_in = max(ring_radius - ring_width / 2, 0)
+    r_out = ring_radius + ring_width / 2
+
+    # Determine overall size of the surface.
+    # We add a margin of 3*edge_sigma to capture most of the Gaussian tails.
+    total_radius = r_out + 3 * edge_sigma
+    total_size = max(int(math.ceil(total_radius * 2)), int(min_size * 6))
+    
+    center = total_size / 2.0
+
+    # Create a grid of (x, y) coordinates centered on the surface
+    x = np.linspace(0, total_size - 1, total_size) - center
+    y = np.linspace(0, total_size - 1, total_size) - center
+    xx, yy = np.meshgrid(x, y)
+    d = np.sqrt(xx**2 + yy**2)  # distance from the center for each pixel
+
+    # Use the difference of two cumulative Gaussians (using scipy erf) to build the ring:
+    # The CDF of a Gaussian is given by 0.5*(1+erf((x)/sqrt(2))).
+    # Thus, the ring profile is:
+    ring_profile = 0.5 * (erf((d - r_in) / (edge_sigma * np.sqrt(2))) - 
+                          erf((d - r_out) / (edge_sigma * np.sqrt(2))))
+    # Ensure values are within [0,1]
+    ring_profile = np.clip(ring_profile, 0, 1)
+
+    # Apply a random pulsation factor (e.g. modulate brightness randomly)
+    pulsation = random.uniform(0.8, 1.2)
+    ring_profile = np.clip(ring_profile * pulsation, 0, 1)
+
+    # Convert profile to an alpha channel (0-255)
+    alpha = (ring_profile * 255).astype(np.uint8)
+
+    # Create an RGBA surface with per-pixel alpha transparency
+    ring_surface = pygame.Surface((total_size, total_size), pygame.SRCALPHA)
+
+    # Draw the ring pixel-by-pixel in white (you could change the color if needed)
+    for i in range(total_size):
+        for j in range(total_size):
+            ring_surface.set_at((j, i), (255, 255, 255, int(alpha[i, j])))
+
+    return ring_surface
+
+def draw_gaussian_ring(screen, ring, x, y):
+    screen.blit(ring, (x - ring.get_width() // 2, y - ring.get_height() // 2))
+
+def draw_pulsating_ring(screen, ring, x, y, time_elapsed, period=2, amplitude=0.1):
+    """
+    Draws the ring with a pulsating size effect.
+    
+    Parameters:
+      - screen: The target Pygame surface.
+      - ring: The pre-created ring surface.
+      - x, y: Coordinates for the center of the ring.
+      - time_elapsed: A time value (in seconds) used to compute the pulsation.
+      - period: Duration (in seconds) of one full pulsation cycle.
+      - amplitude: Maximum deviation (as a fraction of the original size) for the pulsation.
+                 For example, amplitude=0.1 scales the ring between 0.9x and 1.1x its original size.
+    """
+    # Compute the scale factor as a sine wave oscillation
+    scale_factor = 1 + amplitude * math.sin(2 * math.pi * time_elapsed / period)
+    
+    # Calculate new dimensions based on the scale factor
+    new_width = int(ring.get_width() * scale_factor)
+    new_height = int(ring.get_height() * scale_factor)
+    
+    # Scale the ring surface; smoothscale provides better quality
+    scaled_ring = pygame.transform.smoothscale(ring, (new_width, new_height))
+    
+    # Blit the scaled ring, centering it at (x, y)
+    screen.blit(scaled_ring, (x - new_width // 2, y - new_height // 2))
 #endregion
 
 #region Logging
@@ -428,7 +514,23 @@ def export_log_buffer(file_path):
 
 #endregion
 
-#region Trial types
+#region Trial types & conditions
+
+def is_observation_block(block,observation_condition_type):
+    if observation_condition_type == 0:
+        return False
+    elif observation_condition_type == 1:
+        if block < 4:
+            return True
+        else:
+            return False
+    elif observation_condition_type == 2:
+        if block < 4:
+            return False
+        else:
+            return True
+    elif observation_condition_type == 3:
+        return True
 
 def familiarization_trial(scenes, scene,  shape_mapping, word_decode):
     word1 = scenes[scene-1, 3-1]
