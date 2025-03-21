@@ -2,11 +2,13 @@ from scipy.stats import mode
 import arviz as az
 import json
 import numpy as np
+import os
 
-data_path = "C:/Users/Beno/Documents/CEU/continuous_psychophysics/vsl_with_tracking/outputs"
+raw_path = os.path.abspath(os.path.join(os.getcwd(), "..", "outputs"))
+data_path = os.path.abspath(os.path.join(os.getcwd(), "..", "outputs"))
 
 def extract_mcmc_summary(series, subject, run):
-    subject_path = f"{data_path}/{series}/{subject}"
+    subject_path = os.path.join(os.getcwd(), "data", str(series), str(subject))
     inference_data = az.from_netcdf(f"{subject_path}/mcmc_results_{run}.nc")
 
     posterior = inference_data.posterior
@@ -32,5 +34,7 @@ def extract_mcmc_summary(series, subject, run):
 
         json.dump(mcmc_summary, open(f"{subject_path}/mcmc_summary_{run}.json", "w"), default=lambda x: x.tolist() if isinstance(x, np.ndarray) else x)
 
-for subject in range(21, 25):
-    extract_mcmc_summary(1, subject,3)
+series = 1
+run = "4"
+for subject in range(1, 2):
+    extract_mcmc_summary(series, subject,run)

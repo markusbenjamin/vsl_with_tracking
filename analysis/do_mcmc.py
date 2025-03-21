@@ -77,16 +77,18 @@ def load_data(file_path):
 #region LQG functions
 def lqg_model(x):
     # priors
-    action_variability = numpyro.sample("action_variability", dist.HalfCauchy(1.))
-    action_cost = numpyro.sample("action_cost", dist.HalfCauchy(1.))
-    sigma_target = numpyro.sample("sigma_target", dist.HalfCauchy(50.))
-    sigma_cursor = numpyro.sample("sigma_cursor", dist.HalfCauchy(15.))
+    #action_variability = numpyro.sample("action_variability", dist.HalfCauchy(1.)) #sigma_tracking
+    action_variability = numpyro.sample("action_variability",dist.LogNormal(2.06497, 0.396418))
+    action_cost = numpyro.sample("action_cost", dist.HalfCauchy(14.)) #action_cost
+    sigma_target = numpyro.sample("sigma_target", dist.HalfCauchy(700.)) #psi_target
+    sigma_cursor = numpyro.sample("sigma_cursor", dist.HalfCauchy(250.)) #psi_tracking
 
     model = TrackingTask(
         dim = 2,
+        process_noise=14.7, #sigma_target
         action_variability = action_variability,
         action_cost = action_cost, # experiment with this
-        sigma_target = sigma_target, # perception!
+        sigma_target = sigma_target,
         sigma_cursor = sigma_cursor,
         dt =  1. / 60,#3. / 50,
         T = (x.shape)[1]
@@ -119,11 +121,11 @@ def bounded_lqg_model(x):
     numpyro.sample("x", model.conditional_distribution(x), obs=x[:, 1:])
 #endregion
 
-data_path = "C:/Users/Beno/Documents/CEU/continuous_psychophysics/vsl_with_tracking/outputs"
+raw_path = os.path.abspath(os.path.join(os.getcwd(), "..", "outputs"))
 data_path = os.path.abspath(os.path.join(os.getcwd(), "..", "outputs"))
 
 def do_mcmc_for_one_subject(series, subject, run):
-    subject_path = f"{data_path}/{series}/{subject}"
+    subject_path = os.path.join(os.getcwd(), "data", str(series), str(subject))
 
     data_by_blocks = load_data(f"{subject_path}/tracking.txt")
 
@@ -149,8 +151,10 @@ def do_mcmc_for_one_subject(series, subject, run):
 import warnings
 warnings.filterwarnings("ignore", message="invalid value encountered in subtract")
 
-for subject in range(21, 25):
-    do_mcmc_for_one_subject(1, subject,"3")
+run = "4"
+series = 1
+for subject in range(1, 2):
+    do_mcmc_for_one_subject(series, subject, run)
 
 """
 

@@ -1,0 +1,5 @@
+process_noise = sigma_target
+action_variability = sigma_tracking
+sigma_target = psi_target
+sigma_cursor = psi_target
+action_cost = action_cost

@@ -516,7 +516,8 @@ def export_log_buffer(file_path):
 
 #region Trial types & conditions
 
-def is_observation_block(block,observation_condition_type):
+def is_observation_block(block, observation_condition_type):
+    block %= 8 # to handle fam. trial repetition
     if observation_condition_type == 0:
         return False
     elif observation_condition_type == 1:

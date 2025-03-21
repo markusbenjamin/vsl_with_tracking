@@ -159,7 +159,6 @@ if __name__ == "__main__":
             series = input('Series: ')
             subject_ID = input('Subject ID: ')
             exp = '1'
-            familiarization_trial_repetition = -1
             subphase = ''
 
             ## Set run code to determine which type of session to run
@@ -174,15 +173,15 @@ if __name__ == "__main__":
                 phase = input('Phase: (1 - familiarization, 2 - test): ')
                 if phase in ('1', '2'):
                     break
-            ## Set repetition of familiarization phase
-            #if '1':
-            #    while True:
-            #        familiarization_trial_repetition = input('How many repetitions for the familiarization trials? ')
-            #        if familiarization_trial_repetition.isdigit():
-            #            familiarization_trial_repetition = int(familiarization_trial_repetition)
-            #            break
-            #else:
-            #    familiarization_trial_repetition = -1
+            # Set repetition of familiarization phase
+            if '1':
+                while True:
+                    familiarization_trial_repetition = input('How many repetitions for the familiarization trials? ')
+                    if familiarization_trial_repetition.isdigit():
+                        familiarization_trial_repetition = int(familiarization_trial_repetition)
+                        break
+            else:
+                familiarization_trial_repetition = -1
             ## Set subphase for Exp3
             #if phase == '2' and exp == '3':
             #    while True:
@@ -290,7 +289,7 @@ if __name__ == "__main__":
         else:
             scene_order = np.arange(scenes.shape[0])+1
         if 1 < familiarization_trial_repetition:
-            scene_order = np.repeat(scene_order, familiarization_trial_repetition)
+            scene_order = np.tile(scene_order, familiarization_trial_repetition)
         np.savetxt(session_directory+'scene_order.csv', scene_order, delimiter=',', fmt='%d')
 
         trial_num = len(scene_order)
@@ -333,6 +332,7 @@ if __name__ == "__main__":
             'intertrial_duration':intertrial_duration,
             'trial_num':trial_num,
             'trial_num_per_block':trial_num_per_block,
+            'familiarization_trial_repetition': familiarization_trial_repetition,
             'random_start_pos_for_target':random_start_pos_for_target,
             'observation_condition':['none','first half','second half','all'][observation_condition_type],
             'target_type':['blob','ring'][target_type-1],
